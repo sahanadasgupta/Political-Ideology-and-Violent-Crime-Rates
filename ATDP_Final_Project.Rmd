@@ -1,0 +1,153 @@
+---
+title: "ATDP_Final_Project"
+author: "Sahana Dasgupta"
+date: "`r Sys.Date()`"
+output: pdf_document
+---
+
+```{r}
+library(tidyverse)
+crime_data <- USArrests
+crime_data$State <- rownames(USArrests)
+crime_data$State
+liberal_states <- c("California", "Colorado", "Connecticut", "Delaware", "Hawaii", "Illinois", "Maine", "Maryland", "Massachusetts", "New Hampshire", "New Jersey", "New Mexico", "New York", "Oregon", "Rhode Island", "Vermont", "Virginia", "Washington", "Florida", "Georgia", "Minnesota", "Nevada", "North Carolina")
+conservative_states <- c("Arizona", "Alabama", "Alaska", "Arkansas", "Idaho", "Indiana", "Iowa", "Kansas", "Kentucky", "Louisiana", "Mississippi", "Missouri", "Montana", "Nebraska", "North Dakota", "Oklahoma", "South Carolina", "South Dakota", "Tennessee", "Texas", "Utah", "West Virginia", "Michigan", "Ohio", "Pennsylvania", "Wyoming", "Wisconsin")
+crime_data <- crime_data |>
+  mutate(Affiliation = case_when(
+    State %in% liberal_states ~ "Liberal",
+    State %in% conservative_states ~ "Conservative",
+  ))
+```
+
+```{r}
+ggplot(crime_data, aes(x = State, y = UrbanPop, fill = State)) +
+  geom_bar(stat = "identity", color = "black") +
+  scale_fill_viridis_d() +  
+  labs(title = "Urban Population per 100,000 Residents in US States",
+       x = "States",
+       y = "Urban Population Rate") +
+  theme_minimal() + theme(axis.text.x = element_blank(),  
+        axis.ticks.x = element_blank())  
+```
+
+```{r}
+ggplot(USArrests, aes(x = State, y = Rape, fill = State)) +
+  geom_bar(stat = "identity") +
+  labs(title = "Rape by State",
+       x = "State",
+       y = "Rape Arrests per 100,000") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1, size = 5))
+```
+
+```{r}
+#Conservative Murder Graph
+conservative_only <- crime_data |>
+  filter(Affiliation == "Conservative")
+
+ggplot(conservative_only, aes(x = State, y = Murder, fill = State)) +
+  geom_bar(stat = "identity") +
+  labs(title = "Murder Rate by Conservative State",
+       x = "State",
+       y = "Murder Rate") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1, size = 10))
+```
+ 
+```{r}
+#Conservative Assault Graph
+ggplot(conservative_only, aes(x = State, y = Assault, fill = State)) +
+  geom_bar(stat = "identity") +
+  labs(title = "Assault Rate by Conservative State",
+       x = "State",
+       y = "Assault Rate") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1, size = 10))
+```
+
+```{r}
+#Conservative Rape Graph
+ggplot(conservative_only, aes(x = State, y = Rape, fill = State)) +
+  geom_bar(stat = "identity") +
+  labs(title = "Rape Rate by Conservative State",
+       x = "State",
+       y = "Rape Rate") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1, size = 10))
+```
+
+```{r}
+ggplot(conservative_only, aes(x = State, y = UrbanPop, fill = State)) +
+  geom_bar(stat = "identity") +
+  labs(title = "Urban Population Rate by Conservative State",
+       x = "State",
+       y = "Urban Population Rate") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1, size = 10))
+```
+
+```{r}
+#Linearity
+ggplot(conservative_only, aes(x = UrbanPop, y = Murder)) + geom_point() +
+  geom_smooth(method = "lm", se = F, color = "red") +
+  geom_smooth(se = F, color = "blue") + labs(title = "Linearity for Murder by Conservative State") 
+#Homoskedasticity
+fit <- lm(UrbanPop ~ Murder, data = conservative_only)
+library(broom)
+augment(fit) %>% ggplot(aes(x = Murder, y = .resid)) + geom_point() +
+  geom_hline(yintercept = 0, color = "red") + 
+  geom_smooth(se = F, color = "blue") + labs(title = "Homoskedasticity for Murder by Conservative State")
+#Normality
+augment(fit) %>% ggplot(aes(sample = .resid)) +
+  stat_qq() +
+  stat_qq_line() +
+  labs(title = "Normality for Murder by Conservative State", x = "Theoretical quantiles",
+       y = "Standardized residuals")
+```
+
+```{r}
+#Linearity
+ggplot(conservative_only, aes(x = UrbanPop, y = Assault)) + geom_point() +
+  geom_smooth(method = "lm", se = F, color = "red") +
+  geom_smooth(se = F, color = "blue") + labs(title = "Linearity for Assault by Conservative State") 
+#Homoskedasticity
+fit_2 <- lm(UrbanPop ~ Assault, data = conservative_only)
+library(broom)
+augment(fit_2) %>% ggplot(aes(x = Assault, y = .resid)) + geom_point() +
+  geom_hline(yintercept = 0, color = "red") + 
+  geom_smooth(se = F, color = "blue") + labs(title = "Homoskedasticity for Assault by Conservative State")
+#Normality
+augment(fit_2) %>% ggplot(aes(sample = .resid)) +
+  stat_qq() +
+  stat_qq_line() +
+  labs(title = "Normality for Assault by Conservative State", x = "Theoretical quantiles",
+       y = "Standardized residuals")
+```
+
+```{r}
+#Linearity
+ggplot(conservative_only, aes(x = UrbanPop, y = Rape)) + geom_point() +
+  geom_smooth(method = "lm", se = F, color = "red") +
+  geom_smooth(se = F, color = "blue") + labs(title = "Linearity for Rape by Conservative State") 
+#Homoskedasticity
+fit_3 <- lm(UrbanPop ~ Rape, data = conservative_only)
+library(broom)
+augment(fit_3) %>% ggplot(aes(x = Rape, y = .resid)) + geom_point() +
+  geom_hline(yintercept = 0, color = "red") + 
+  geom_smooth(se = F, color = "blue") + labs(title = "Homoskedasticity for Rape by Conservative State")
+#Normality
+augment(fit_3) %>% ggplot(aes(sample = .resid)) +
+  stat_qq() +
+  stat_qq_line() +
+  labs(title = "Normality for Rape by Conservative State", x = "Theoretical quantiles",
+       y = "Standardized residuals")
+```
+
+
+
+
+
+
+
+
+
